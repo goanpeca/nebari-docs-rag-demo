@@ -224,11 +224,16 @@ def display_sources(sources: list[dict[str, Any]]) -> None:
                 relevance_class = "relevance-low"
                 relevance_emoji = ""
 
-            # Convert file path to nebari.dev URL
-            file_path = source.get("file_path", "")
-            # Remove .md or .mdx extension and convert to URL
-            doc_path = file_path.replace(".mdx", "").replace(".md", "")
-            doc_url = f"https://nebari.dev/docs/{doc_path}"
+            # Get URL - website sources have 'url', docs have 'file_path'
+            if "url" in source:
+                # Website source - use URL directly
+                doc_url = source["url"]
+            else:
+                # Documentation source - convert file path to URL
+                file_path = source.get("file_path", "")
+                # Remove .md or .mdx extension and convert to URL
+                doc_path = file_path.replace(".mdx", "").replace(".md", "")
+                doc_url = f"https://nebari.dev/docs/{doc_path}"
 
             title = source.get("title", "Unknown")
             heading_text = f"→ {source.get('heading', '')}" if source.get("heading") else ""
@@ -315,12 +320,11 @@ def main() -> None:
         st.caption("Try these example questions:")
 
         example_questions = [
+            "Why should we use Nebari?",
             "Show me the Nebari architecture diagram",
             "How do I deploy Nebari on AWS?",
             "What is the difference between local and cloud deployment?",
             "How do I configure authentication with Keycloak?",
-            "What are the hardware requirements?",
-            "How do I troubleshoot deployment errors?",
         ]
 
         for question in example_questions:
@@ -334,9 +338,7 @@ def main() -> None:
         if "query_history" in st.session_state and st.session_state.query_history:
             st.caption("Click to re-ask:")
             for query in reversed(st.session_state.query_history[-5:]):  # Show last 5
-                if st.button(
-                    f"↩ {query[:40]}...", key=f"history_{hash(query)}", use_container_width=True
-                ):
+                if st.button(f"↩ {query[:40]}...", key=f"history_{hash(query)}", width="stretch"):
                     st.session_state.example_query = query
         else:
             st.caption("No recent queries yet")
@@ -370,7 +372,7 @@ def main() -> None:
 
         # Logout button
         st.markdown("---")
-        if st.button("Logout", use_container_width=True):
+        if st.button("Logout", width="stretch"):
             st.session_state.authenticated = False
             st.session_state.messages = []
             st.session_state.query_history = []
@@ -405,7 +407,7 @@ def main() -> None:
                         st.image(
                             img_url,
                             caption=alt_text or "Nebari Documentation Image",
-                            use_container_width=True,
+                            width="stretch",
                         )
 
             if message.get("sources"):
@@ -457,7 +459,7 @@ def main() -> None:
                     st.image(
                         img_url,
                         caption=alt_text or "Nebari Documentation Image",
-                        use_container_width=True,
+                        width="stretch",
                     )
 
             # Display sources

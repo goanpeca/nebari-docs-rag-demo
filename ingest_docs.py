@@ -20,8 +20,86 @@ from utils.chunking import chunk_by_headers, extract_frontmatter, strip_mdx_comp
 load_dotenv()
 
 
+def extract_homepage_content() -> str:
+    """Extract marketing content from homepage JSX file.
+
+    Returns
+    -------
+    str
+        Extracted homepage content as markdown
+    """
+    content = []
+
+    # Hero section
+    content.append("# Nebari - Your Open Source Data Science Platform\n")
+    content.append("Built for scale, designed for collaboration.\n")
+
+    # Why choose Nebari section
+    content.append("\n## Why Choose Nebari?\n")
+    content.append(
+        "\n### GitOps Approach\n"
+        "Integrated DevOps and security best practices for a robust deployment "
+        "and better infrastructure management.\n"
+    )
+    content.append(
+        "\n### Opinionated\n"
+        "Designed with integrations and configurations selected from real-world "
+        "experience, so that you can use it out-of-the-box for a variety of data "
+        "science workloads.\n"
+    )
+    content.append(
+        "\n### Rooted in Open Source\n"
+        "Developed with community in mind and under a BSD-3 license, we strive to "
+        "contribute back to the upstream OSS projects wherever possible.\n"
+    )
+    content.append(
+        "\n### Collaboration-First\n"
+        "Large teams can share work and iterate quickly with reproducible "
+        "environments. Administrators can manage team resources effectively, "
+        "all from the same platform.\n"
+    )
+    content.append(
+        "\n### Dask Powered\n"
+        "Nebari ships with Dask so you can scale your work to terabytes of data, "
+        "leverage cloud instances with GPUs, and take advantage of adaptive scaling "
+        "for managing costs.\n"
+    )
+    content.append(
+        "\n### Your Favorite Tools\n"
+        "Built with open source infrastructure and tools to give you complete "
+        "flexibility over your deployment and fit your team's specific needs.\n"
+    )
+
+    # Deploy anywhere section
+    content.append(
+        "\n## Deploy Anywhere\n"
+        "Try Nebari on your local machine or deploy it on your cloud of choice. "
+        "Nebari is designed to be flexible, extensible, and vendor-agnostic.\n\n"
+        "Nebari can be seamlessly deployed to the major public cloud providers, "
+        "including AWS, Azure, and GCP.\n"
+    )
+
+    # Integrations section
+    content.append(
+        "\n## Integrations\n"
+        "Nebari comes with out-of-the-box integrations to multiple tools in the "
+        "data science ecosystem:\n"
+        "- conda-store\n"
+        "- VSCode\n"
+        "- Grafana\n"
+        "- Jitsi\n"
+        "- Argo Workflows\n"
+        "- JupyterHub\n"
+    )
+
+    return "".join(content)
+
+
 def scan_docs_directory(docs_path: str) -> list[dict[str, Any]]:
-    """Scan nebari-docs directory recursively for markdown files.
+    """Scan nebari-docs directory recursively for all markdown files.
+
+    Scans documentation (docs/docs/), community content (docs/community/),
+    and root README.md.
 
     Parameters
     ----------
@@ -34,49 +112,105 @@ def scan_docs_directory(docs_path: str) -> list[dict[str, Any]]:
         List of document dictionaries with content and metadata
     """
     docs: list[dict[str, Any]] = []
-    docs_dir = Path(docs_path) / "docs" / "docs"
+    base_path = Path(docs_path) / "docs"
 
-    if not docs_dir.exists():
-        print(f" Documentation directory not found: {docs_dir}")
+    if not base_path.exists():
+        print(f" Base directory not found: {base_path}")
         return docs
 
-    # Find all .md and .mdx files
-    md_files = list(docs_dir.glob("**/*.md"))
-    mdx_files = list(docs_dir.glob("**/*.mdx"))
-    all_files = md_files + mdx_files
+    # Define content directories to scan
+    content_dirs = [
+        ("docs", base_path / "docs", "docs"),  # Documentation
+        ("community", base_path / "community", "community"),  # Community content
+    ]
 
-    print(f" Found {len(all_files)} documentation files")
+    # Scan each content directory
+    for source_name, content_dir, source_type in content_dirs:
+        if not content_dir.exists():
+            print(f"  Skipping {source_name} (directory not found)")
+            continue
 
-    for file_path in all_files:
+        # Find all .md and .mdx files
+        md_files = list(content_dir.glob("**/*.md"))
+        mdx_files = list(content_dir.glob("**/*.mdx"))
+        all_files = md_files + mdx_files
+
+        print(f" Found {len(all_files)} files in {source_name}/")
+
+        for file_path in all_files:
+            try:
+                with open(file_path, encoding="utf-8") as f:
+                    content = f.read()
+
+                # Extract frontmatter
+                frontmatter, content = extract_frontmatter(content)
+
+                # Strip MDX components if it's an MDX file
+                if file_path.suffix == ".mdx":
+                    content = strip_mdx_components(content)
+
+                # Determine category from path
+                relative_path = file_path.relative_to(content_dir)
+                category = relative_path.parts[0] if len(relative_path.parts) > 1 else source_type
+
+                # Build metadata
+                metadata = {
+                    "source": source_type,
+                    "file_path": str(relative_path),
+                    "category": category,
+                    "title": frontmatter.get("title", file_path.stem),
+                    "description": frontmatter.get("description", ""),
+                    "id": frontmatter.get("id", file_path.stem),
+                    "source_file": str(file_path),
+                }
+
+                docs.append({"content": content, "metadata": metadata})
+
+            except (OSError, UnicodeDecodeError) as e:
+                print(f"  Error processing {file_path}: {e}")
+
+    # Also check for root README
+    readme_path = base_path / "README.md"
+    if readme_path.exists():
         try:
-            with open(file_path, encoding="utf-8") as f:
+            with open(readme_path, encoding="utf-8") as f:
                 content = f.read()
 
-            # Extract frontmatter
             frontmatter, content = extract_frontmatter(content)
 
-            # Strip MDX components if it's an MDX file
-            if file_path.suffix == ".mdx":
-                content = strip_mdx_components(content)
-
-            # Determine category from path
-            relative_path = file_path.relative_to(docs_dir)
-            category = relative_path.parts[0] if len(relative_path.parts) > 1 else "root"
-
-            # Build metadata
             metadata = {
-                "file_path": str(relative_path),
-                "category": category,
-                "title": frontmatter.get("title", file_path.stem),
+                "source": "docs",
+                "file_path": "README.md",
+                "category": "root",
+                "title": frontmatter.get("title", "README"),
                 "description": frontmatter.get("description", ""),
-                "id": frontmatter.get("id", file_path.stem),
-                "source_file": str(file_path),
+                "id": frontmatter.get("id", "readme"),
+                "source_file": str(readme_path),
             }
 
             docs.append({"content": content, "metadata": metadata})
+            print(" Found 1 file in root/")
 
         except (OSError, UnicodeDecodeError) as e:
-            print(f"  Error processing {file_path}: {e}")
+            print(f"  Error processing {readme_path}: {e}")
+
+    # Add homepage marketing content
+    homepage_content = extract_homepage_content()
+    if homepage_content:
+        metadata = {
+            "source": "website",
+            "file_path": "index.jsx",
+            "category": "home",
+            "title": "Nebari Homepage",
+            "description": (
+                "Your open source data science platform. "
+                "Built for scale, designed for collaboration."
+            ),
+            "id": "homepage",
+            "source_file": str(base_path / "src" / "pages" / "index.jsx"),
+        }
+        docs.append({"content": homepage_content, "metadata": metadata})
+        print(" Found 1 homepage file")
 
     return docs
 
@@ -134,7 +268,7 @@ def ingest_to_chroma(
     try:
         client.delete_collection(name=collection_name)
         print(f"  Deleted existing collection: {collection_name}")
-    except ValueError:
+    except Exception:
         # Collection doesn't exist, which is fine
         print(f"  No existing collection to delete: {collection_name}")
 
