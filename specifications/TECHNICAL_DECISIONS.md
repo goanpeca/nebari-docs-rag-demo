@@ -4,9 +4,9 @@ This document records key technical decisions made during the project, along wit
 
 ## Decision Log
 
-### 1. LLM Selection: Claude 3.5 Sonnet vs GPT-4
+### 1. LLM Selection: Claude Sonnet 4 vs GPT-4
 
-**Decision**: Use Anthropic Claude 3.5 Sonnet
+**Decision**: Use Anthropic Claude Sonnet 4
 
 **Date**: 2026-02-02
 
@@ -16,7 +16,7 @@ This document records key technical decisions made during the project, along wit
 
 | Option                   | Pros                                                                                                               | Cons                                                                |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| **Claude 3.5 Sonnet** ✅ | • Excellent reasoning<br>• 200K context window<br>• Strong citation accuracy<br>• Better at following instructions | • Slightly more expensive<br>• Smaller ecosystem                    |
+| **Claude Sonnet 4** ✅ | • Excellent reasoning<br>• 200K context window<br>• Strong citation accuracy<br>• Better at following instructions | • Slightly more expensive<br>• Smaller ecosystem                    |
 | GPT-4 Turbo              | • Faster responses<br>• Larger ecosystem<br>• More examples available                                              | • 128K context (less than Claude)<br>• More prone to hallucinations |
 | GPT-3.5 Turbo            | • Cheapest option<br>• Very fast                                                                                   | • Lower quality answers<br>• Weaker reasoning                       |
 | Local Llama 3            | • Free (no API costs)<br>• Privacy                                                                                 | • Much slower<br>• Requires GPU<br>• Lower quality                  |
@@ -43,7 +43,7 @@ This document records key technical decisions made during the project, along wit
 
 **Date**: 2026-02-02
 
-**Context**: Need vector storage for ~250 documentation chunks with metadata filtering.
+**Context**: Need vector storage for ~730 documentation chunks (65 documents including homepage) with metadata filtering.
 
 **Options Considered**:
 
@@ -60,7 +60,7 @@ This document records key technical decisions made during the project, along wit
 2. **Cost**: Completely free, no API limits
 3. **Portability**: SQLite-based, easy to commit to Git
 4. **Development Speed**: Focus on RAG logic, not database setup
-5. **Sufficient for Scale**: 250 chunks is tiny, ChromaDB handles 100K+ easily
+5. **Sufficient for Scale**: ~730 chunks is small, ChromaDB handles 100K+ easily
 
 **Trade-offs Accepted**:
 
@@ -305,15 +305,15 @@ Answer:
 1. **Semantic Chunking**: Measurably improved retrieval accuracy
 2. **Metadata Filtering**: Category filters provided great UX
 3. **Source Citations**: Increased user trust in answers
-4. **Claude 3.5**: Excellent reasoning, few hallucinations
+4. **Claude Sonnet 4**: Excellent reasoning, few hallucinations
 5. **Streamlit**: Incredibly fast prototyping
 
 ### What Could Be Improved
 
 1. **Streaming**: Claude supports streaming, UI doesn't (yet)
-2. **Caching**: Frequent queries could be cached
-3. **Conversation Memory**: Multi-turn questions need context
-4. **Analytics**: No tracking of popular queries or accuracy
+2. **Caching**: Frequent queries could be cached for better performance
+3. **Conversation Memory**: Multi-turn questions need context across sessions
+4. **Advanced Analytics**: Basic stats implemented (feedback, cost tracking), but could add query pattern analysis
 
 ### What We'd Do Differently
 
@@ -337,9 +337,10 @@ Answer:
 
 **Phase 2: Enhanced Features** (1 month)
 
-- [ ] Conversation memory
-- [ ] Multi-query retrieval
-- [ ] Feedback loop (thumbs up/down)
+- [ ] Conversation memory (cross-session)
+- [ ] Multi-query retrieval (currently only for "why" questions)
+- [x] Feedback loop (👍👎) - Already implemented
+- [x] Cost tracking and performance metrics - Already implemented
 - [ ] A/B testing framework
 
 **Phase 3: Advanced RAG** (2-3 months)

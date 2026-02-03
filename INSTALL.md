@@ -32,7 +32,8 @@ Add to `.env`:
 ```bash
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 NEBARI_DOCS_PATH=/Users/goanpeca/Desktop/develop/datalayer/nebari-docs
-CHROMA_PERSIST_DIR=./chroma_db
+DEMO_USERNAME=demo
+DEMO_PASSWORD=your_password
 ```
 
 ### Step 3: Verify Installation
@@ -74,9 +75,9 @@ pip install --upgrade pip
 # Install packages one by one (more reliable)
 pip install streamlit
 pip install chromadb
-pip install langchain langchain-anthropic langchain-community
 pip install anthropic
-pip install python-dotenv markdown-it-py pymdown-extensions pyyaml tiktoken
+pip install python-dotenv markdown-it-py pymdown-extensions pyyaml
+pip install httpx extra-streamlit-components watchdog
 ```
 
 ### Option B: Install ChromaDB without onnxruntime (lighter)
@@ -184,7 +185,7 @@ conda env create -f environment.yml
 **Fix**: Install packages individually:
 
 ```bash
-pip install streamlit chromadb anthropic langchain-anthropic python-dotenv
+pip install streamlit chromadb anthropic python-dotenv httpx extra-streamlit-components
 ```
 
 ### "ImportError: cannot import name 'Anthropic'"
@@ -225,12 +226,12 @@ python -c "
 import streamlit
 import chromadb
 import anthropic
-import langchain
+import httpx
 print('✅ All packages imported successfully!')
 print(f'Streamlit: {streamlit.__version__}')
 print(f'ChromaDB: {chromadb.__version__}')
 print(f'Anthropic: {anthropic.__version__}')
-print(f'LangChain: {langchain.__version__}')
+print(f'HTTPX: {httpx.__version__}')
 "
 ```
 
@@ -241,7 +242,7 @@ Expected output:
 Streamlit: 1.31.0
 ChromaDB: 0.4.24
 Anthropic: 0.18.1
-LangChain: 0.1.0
+HTTPX: 0.27.0
 ```
 
 ---

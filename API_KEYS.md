@@ -4,7 +4,7 @@
 
 ### 1. Anthropic API Key (REQUIRED)
 
-**Purpose**: Powers Claude 3.5 Sonnet for generating answers
+**Purpose**: Powers Claude Sonnet 4 (2025-05-14) for generating answers
 
 **How to get it**:
 
@@ -77,10 +77,9 @@ Your `.env` file only needs:
 ```bash
 # Required
 ANTHROPIC_API_KEY=sk-ant-your-key-here
-
-# Paths (adjust if needed)
 NEBARI_DOCS_PATH=/Users/goanpeca/Desktop/develop/datalayer/nebari-docs
-CHROMA_PERSIST_DIR=./chroma_db
+DEMO_USERNAME=demo
+DEMO_PASSWORD=your_password
 ```
 
 That's it! Just **one API key**.

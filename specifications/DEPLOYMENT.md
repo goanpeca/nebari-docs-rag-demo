@@ -16,7 +16,7 @@ Complete guide for deploying the Nebari RAG Demo to various environments.
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.11+
 - 4GB RAM minimum
 - Anthropic API key
 - Git
@@ -129,6 +129,8 @@ python -c "from agent import NebariAgent; agent = NebariAgent(); print(agent.ans
    ```toml
    # Click "Secrets" section
    ANTHROPIC_API_KEY = "sk-ant-your-actual-key-here"
+   DEMO_USERNAME = "your_username"
+   DEMO_PASSWORD = "your_password"
    ```
 
 8. Click **"Deploy!"**
@@ -315,7 +317,7 @@ async def query(question: str, top_k: int = 5):
 - [ ] Build React chat UI
 - [ ] Add streaming support
 - [ ] Add conversation history
-- [ ] Add feedback buttons (👍 👎)
+- [x] Add feedback buttons (👍 👎) - Already implemented in Streamlit UI
 - [ ] Add analytics tracking
 
 #### Phase 3: Infrastructure (1 week)

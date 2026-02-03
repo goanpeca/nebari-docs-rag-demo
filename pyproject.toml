@@ -43,10 +43,11 @@ exclude = ["tests/", "clean_all.py", "test_api.py"]
 module = [
     "chromadb.*",
     "anthropic.*",
-    "langchain.*",
     "streamlit.*",
     "dotenv.*",
     "pytest.*",
+    "httpx.*",
+    "extra_streamlit_components.*",
 ]
 ignore_missing_imports = true
 

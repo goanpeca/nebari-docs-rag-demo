@@ -28,8 +28,8 @@ Build a production-ready RAG (Retrieval Augmented Generation) agent using Stream
 ┌────────────────────────▼────────────────────────────────────┐
 │                 Chroma Vector Database                      │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │ Embeddings: ~250 chunks from 64 docs                 │  │
-│  │ Metadata: category, file_path, title, doc_type      │  │
+│  │ Embeddings: ~730 chunks from 65 docs (+ homepage)   │  │
+│  │ Metadata: category, file_path, title, source        │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -40,11 +40,11 @@ Build a production-ready RAG (Retrieval Augmented Generation) agent using Stream
 | ------------------- | --------------------------------------- | --------------------------------------------------- |
 | **UI Framework**    | Streamlit 1.31+                         | Interactive web interface                           |
 | **Vector DB**       | ChromaDB 0.4+                           | Document embeddings & similarity search             |
-| **Embeddings**      | Voyage AI `voyage-2` or OpenAI          | Convert text to vectors (1024 dims, cost-effective) |
-| **LLM**             | Anthropic Claude 3.5 Sonnet             | Answer generation & synthesis (excellent reasoning) |
+| **Embeddings**      | Sentence Transformers (all-MiniLM-L6-v2) | Local embeddings (384 dims, free)                   |
+| **LLM**             | Anthropic Claude Sonnet 4               | Answer generation & synthesis (excellent reasoning) |
 | **Markdown Parser** | `markdown-it-py` + `pymdown-extensions` | Parse markdown/MDX files                            |
-| **Document Loader** | LangChain `DirectoryLoader`             | Batch file ingestion                                |
-| **Orchestration**   | LangChain 0.1+                          | Agent framework & chains                            |
+| **HTTP Client**     | `httpx`                                 | Image downloads for export                          |
+| **Auth**            | `extra-streamlit-components`            | Cookie-based authentication                         |
 
 **Deployment Target**: Streamlit Cloud (public demo)
 **Timeline**: 1-2 days (MVP focus with polished UX)
@@ -55,7 +55,7 @@ Given the tight timeline and interview context, the implementation will focus on
 
 ### Must-Have Features (Day 1)
 
-1. ✅ **Document ingestion pipeline** - Parse all 64 nebari-docs files
+1. ✅ **Document ingestion pipeline** - Parse all 65 files (64 docs + homepage)
 2. ✅ **Chroma vector database** - Store embeddings with metadata
 3. ✅ **Basic RAG agent** - Query → Retrieve → Answer with Claude
 4. ✅ **Streamlit UI** - Clean chat interface with source citations
@@ -69,19 +69,22 @@ Given the tight timeline and interview context, the implementation will focus on
 4. ✅ **Error handling** - Graceful API failures
 5. ✅ **README documentation** - Clear setup & demo instructions
 
-### Nice-to-Have (If Time Permits)
+### Advanced Features (Actually Implemented!)
 
-- Conversation memory (last 3-5 exchanges)
-- Document category filtering
-- Query response time metrics
-- Feedback buttons (👍 👎)
+1. ✅ **Cookie authentication** - 7-day persistent login (HTTPS only)
+2. ✅ **Feedback system** - Thumbs up/down on each answer
+3. ✅ **Cost tracking** - Real-time token usage & cost monitoring
+4. ✅ **Performance metrics** - Response time, retrieval time, LLM time
+5. ✅ **Export functionality** - Markdown and Zip with downloaded images
+6. ✅ **Query expansion** - Special handling for "why" questions with homepage boosting
+7. ✅ **Real-time stats** - Sidebar updates immediately after queries
 
-### Out of Scope for MVP
+### Future Enhancements
 
-- Multi-query retrieval
-- Evaluation dashboard
-- Fine-tuned embeddings
-- Advanced agent tools
+- Conversation memory (cross-session context)
+- Streaming responses
+- Advanced analytics dashboard
+- Hybrid search (vector + BM25)
 
 ---
 
@@ -279,7 +282,7 @@ if prompt := st.chat_input("Ask about Nebari..."):
 
 #### 4.1 Conversation Memory
 
-- Use LangChain `ConversationBufferMemory`
+- Use Streamlit session state for conversation context
 - Maintain last 5 Q&A pairs for context
 - Rephrase follow-up questions using conversation history
 
@@ -329,19 +332,19 @@ nebari-agent/
 
 ```
 streamlit>=1.31.0
+streamlit>=1.31.0
+extra-streamlit-components>=0.1.60
 chromadb>=0.4.22
-langchain>=0.1.0
-langchain-anthropic>=0.1.0
 anthropic>=0.18.0
 python-dotenv>=1.0.0
 markdown-it-py>=3.0.0
 pymdown-extensions>=10.7
 pyyaml>=6.0
-tiktoken>=0.5.2
-voyageai>=0.2.0
+httpx>=0.27.0
+watchdog>=3.0.0
 ```
 
-**Note on Embeddings**: Use Voyage AI for embeddings (1024 dims, cost-effective) or fall back to Anthropic's coming embedding model. OpenAI embeddings work too but prefer Anthropic ecosystem for consistency.
+**Note on Embeddings**: Uses local Sentence Transformers (all-MiniLM-L6-v2) via ChromaDB default - completely free, no API costs. 384 dimensions, excellent quality for technical documentation.
 
 ## Environment Setup
 
@@ -447,7 +450,7 @@ enableCORS = false
 python ingest_docs.py --docs-path $NEBARI_DOCS_PATH --force-refresh
 ```
 
-Output: `Ingested 64 documents, created 247 chunks, stored in Chroma`
+Output: `Ingested 65 documents, created ~730 chunks, stored in Chroma`
 
 ### Step 2: Launch Streamlit App
 
@@ -577,7 +580,7 @@ def hybrid_search(query, collection, top_k=5, filters=None):
 - **Why Chroma**: "Chose Chroma for its simplicity and Python-native API - perfect for rapid prototyping. It supports metadata filtering which lets us leverage Nebari's Diataxis documentation structure."
 - **Chunking Strategy**: "Used semantic chunking by markdown headers instead of arbitrary character splits. This preserves logical document structure and improves retrieval quality by ~30%."
 - **Embedding Choice**: "Voyage AI embeddings offer 1024 dimensions at lower cost than OpenAI, with comparable quality for technical documentation."
-- **Claude 3.5 Sonnet**: "Selected for its excellent reasoning on technical content and 200K context window - critical for handling long documentation chains."
+- **Claude Sonnet 4**: "Selected for its excellent reasoning on technical content and 200K context window - critical for handling long documentation chains."
 
 #### User Experience
 
@@ -726,7 +729,7 @@ After implementation, verify:
 - **Nebari Docs**: `/Users/goanpeca/Desktop/develop/datalayer/nebari-docs`
 - **Chroma Docs**: https://docs.trychroma.com/
 - **Streamlit Docs**: https://docs.streamlit.io/
-- **LangChain RAG Tutorial**: https://python.langchain.com/docs/use_cases/question_answering/
+- **Anthropic Docs**: https://docs.anthropic.com/
 
 ---
 

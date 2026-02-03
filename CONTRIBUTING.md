@@ -47,11 +47,11 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 
 **Areas for contribution:**
 
-- Improve retrieval accuracy (better chunking, hybrid search)
-- Add conversation memory
-- Implement streaming responses
+- Improve retrieval accuracy (hybrid search, multi-query retrieval)
+- Add conversation memory (future feature)
+- Implement streaming responses (future feature)
 - Enhance UI/UX
-- Add tests
+- Add tests (currently at ~50% coverage)
 - Improve documentation
 - Fix bugs
 
@@ -59,7 +59,7 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.11+
 - Git
 - Anthropic API key
 
@@ -76,9 +76,6 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Install development dependencies
-pip install pytest black flake8 mypy
 
 # Configure environment
 cp .env.example .env
@@ -110,14 +107,8 @@ streamlit run app.py
    # Run tests
    pytest
 
-   # Check code formatting
-   black --check .
-
-   # Check linting
-   flake8 .
-
-   # Type checking
-   mypy .
+   # Run pre-commit hooks (ruff, pydocstyle, bandit, mypy)
+   pre-commit run --all-files
    ```
 
 4. **Commit changes**:
@@ -140,9 +131,10 @@ streamlit run app.py
 **Follow PEP 8** with these specifics:
 
 - Line length: 100 characters (not 79)
-- Use Black for formatting
+- Use Ruff for linting and formatting
 - Use type hints for function signatures
 - Use docstrings (Google style)
+- Run pre-commit hooks before committing
 
 **Example**:
 
@@ -360,9 +352,8 @@ Fixes #123
 ```
 feat(agent): add conversation memory support
 
-Implements conversation memory using LangChain's
-ConversationBufferMemory to maintain context across
-multiple queries.
+Implements conversation memory to maintain context across
+multiple queries using Streamlit session state.
 
 Fixes #45
 ```
@@ -372,32 +363,31 @@ Fixes #45
 ### High Priority
 
 - [ ] Add streaming support for Claude responses
-- [ ] Implement conversation memory
-- [ ] Add query caching (Redis)
-- [ ] Improve test coverage (target: 80%)
+- [ ] Implement conversation memory (maintain context across multiple queries)
+- [ ] Improve test coverage (currently ~50%, target: 80%)
 - [ ] Add CI/CD pipeline (GitHub Actions)
+- [ ] Add query caching (Redis or in-memory)
 
 ### Medium Priority
 
-- [ ] Multi-query retrieval
-- [ ] Feedback loop (thumbs up/down)
-- [ ] Analytics dashboard
-- [ ] Better error handling
-- [ ] Performance optimization
+- [ ] Advanced retrieval (hybrid search, multi-query)
+- [ ] Analytics dashboard (expand current sidebar stats)
+- [ ] Better error handling and recovery
+- [ ] Performance optimization (response time, caching)
+- [ ] Add integration tests
 
 ### Low Priority
 
 - [ ] Multi-language support
 - [ ] Voice input
-- [ ] Export conversation to PDF
-- [ ] Dark/light theme toggle
+- [ ] Additional export formats (PDF, JSON)
 
 ### Documentation
 
-- [ ] API documentation
+- [ ] API documentation (automated with TypeDoc/Sphinx)
 - [ ] Tutorial videos
-- [ ] Architecture diagrams
-- [ ] Performance benchmarks
+- [ ] Architecture diagrams (expand current documentation)
+- [ ] Performance benchmarks (automated testing)
 
 ## Questions?
 

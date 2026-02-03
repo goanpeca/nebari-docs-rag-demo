@@ -29,7 +29,7 @@ Detailed technical architecture documentation including:
 
 Record of key technical decisions and trade-offs:
 
-- Why Claude 3.5 Sonnet over GPT-4
+- Why Claude Sonnet 4 over GPT-4
 - Why ChromaDB over Pinecone/Weaviate
 - Semantic chunking vs character-based
 - Embedding model selection

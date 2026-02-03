@@ -48,9 +48,9 @@ The Nebari Documentation Assistant is a RAG (Retrieval Augmented Generation) sys
 │  VECTOR DATABASE │            │    LLM SERVICE       │
 │   (ChromaDB)     │            │  (Anthropic API)     │
 │                  │            │                      │
-│  • ~250 chunks   │            │  • Claude 3.5 Sonnet │
+│  • ~730 chunks   │            │  • Claude Sonnet 4   │
 │  • Embeddings    │            │  • 200K context      │
-│  • Metadata      │            │  • Streaming support │
+│  • Metadata      │            │  • Cost tracking     │
 │  • Persistence   │            │                      │
 └──────────────────┘            └──────────────────────┘
 ```
@@ -162,7 +162,7 @@ prompt = SYSTEM_PROMPT.format(
 
 # Generate with Claude
 response = anthropic.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-20250514",
     max_tokens=2000,
     temperature=temperature,
     messages=[{"role": "user", "content": prompt}]
@@ -298,26 +298,26 @@ collection = client.create_collection(
 **Storage**:
 
 - Format: SQLite + DuckDB
-- Size: ~15MB for 250 chunks
+- Size: ~15MB for ~730 chunks (65 docs including homepage)
 - Persistence: Local directory
 - Backup: Git-committed for deployment
 
 ### LLM Integration (Anthropic Claude)
 
-**Model**: `claude-3-5-sonnet-20241022`
+**Model**: `claude-sonnet-4-20250514`
 
 **Specifications**:
 
 - Context window: 200K tokens
 - Max output: 4K tokens (using 2K for faster responses)
-- Training cutoff: April 2024
+- Training cutoff: January 2025
 - Strengths: Reasoning, technical content, citation accuracy
 
 **API Configuration**:
 
 ```python
 message = anthropic.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-20250514",
     max_tokens=2000,
     temperature=0.3,  # Lower for factual answers
     messages=[{"role": "user", "content": prompt}]
@@ -354,8 +354,8 @@ message = anthropic.messages.create(
 
 **Current Limits**:
 
-- Documents: 64 (can scale to 10K+)
-- Chunks: 250 (can scale to 100K+)
+- Documents: 65 (64 docs + homepage, can scale to 10K+)
+- Chunks: ~730 (can scale to 100K+)
 - Concurrent users: ~10-20 (Streamlit Cloud free tier)
 - Queries/sec: ~0.5 (rate limited by Claude API)
 
@@ -386,33 +386,66 @@ message = anthropic.messages.create(
 
 - Query length limits (max 500 chars)
 - Rate limiting (future enhancement)
-- Injection attack prevention (LangChain sanitization)
+- Input sanitization and validation
 
-## Future Architecture Enhancements
+## Implemented Advanced Features
 
-### Phase 2: Conversation Memory
+### Query Expansion (✅ Implemented)
 
 ```
-Agent + ConversationBufferMemory
+"Why should we use Nebari?" Query
     ↓
-Maintain last 5 Q&A pairs
-    ↓
-Rephrase queries using context
-```
-
-### Phase 3: Multi-Query Retrieval
-
-```
-Single Query → Generate 3 variations
+Generate 3 variations:
+- Original query
+- "why choose nebari benefits features advantages"
+- "gitops collaboration dask open source platform"
     ↓
 Retrieve for each
     ↓
-Deduplicate + re-rank
+Homepage content relevance boosting (0.6x distance)
     ↓
-Better recall
+Better recall for benefits/value proposition questions
 ```
 
-### Phase 4: Hybrid Search
+### Cookie Authentication (✅ Implemented)
+
+```
+Login with username/password
+    ↓
+SHA-256 hash stored in cookie
+    ↓
+7-day expiration (604800 seconds)
+    ↓
+Persistent login across page reloads (HTTPS only)
+```
+
+### Feedback System (✅ Implemented)
+
+```
+Thumbs up/down on each answer
+    ↓
+Stored in session state
+    ↓
+Real-time stats in sidebar
+    ↓
+Export conversation with metadata
+```
+
+## Future Architecture Enhancements
+
+### Phase 2: Conversation Memory (Planned)
+
+```
+Maintain conversation context
+    ↓
+Store last 5 Q&A pairs in session state
+    ↓
+Rephrase follow-up queries using context
+    ↓
+Better multi-turn conversations
+```
+
+### Phase 3: Hybrid Search (Planned)
 
 ```
 Vector Search + BM25 Keyword Search
@@ -422,14 +455,24 @@ Ensemble ranking
 Combine semantic + lexical matching
 ```
 
-### Phase 5: Agent Tools
+### Phase 4: Streaming Responses (Planned)
+
+```
+Enable Claude streaming API
+    ↓
+Display tokens as they arrive
+    ↓
+Reduced perceived latency
+```
+
+### Phase 5: Agent Tools (Planned)
 
 ```
 Give agent ability to:
 - Generate example commands
 - Create config files
 - Search GitHub issues
-- Query Slack archives
+- Query community forums
 ```
 
 ---

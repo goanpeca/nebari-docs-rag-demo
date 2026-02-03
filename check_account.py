@@ -34,18 +34,18 @@ except Exception as e:
     print(f"\n API Key error: {e}")
 
 print("\n" + "=" * 60)
-print("NEXT STEPS TO GET CLAUDE 3.5 SONNET ACCESS")
+print("NEXT STEPS TO GET CLAUDE SONNET 4 ACCESS")
 print("=" * 60)
 
 print("""
 Your account is likely on TIER 1 (new accounts).
 
-To upgrade to higher tiers and access Claude 3.5 Sonnet:
+To upgrade to higher tiers and access Claude Sonnet 4:
 
 1. **Automatic Tier Upgrade:**
-   - Spend $5 on Haiku → Tier 2 (Claude 3 Sonnet access)
-   - Spend $40 total → Tier 3 (Claude 3 Opus access)
-   - Spend $200 total → Tier 4 (Claude 3.5 Sonnet access)
+   - Spend $5 on Haiku → Tier 2 (Claude Sonnet access)
+   - Spend $40 total → Tier 3 (Claude Opus access)
+   - Spend $200 total → Tier 4 (Claude Sonnet 4 access)
 
 2. **Manual Request (Faster):**
    Go to: https://console.anthropic.com/settings/limits
@@ -53,8 +53,8 @@ To upgrade to higher tiers and access Claude 3.5 Sonnet:
 
    OR email: support@anthropic.com
    Subject: "Request API Tier Upgrade - Have Credits"
-   Body: "I have $27 in credits and need access to Claude 3.5
-         Sonnet for a project demo. Please upgrade my tier."
+   Body: "I have credits and need access to Claude Sonnet 4
+         for a project demo. Please upgrade my tier."
 
 3. **Use Haiku for Now (Recommended for Demo):**
    - Haiku is 75% cheaper than Sonnet

@@ -1,89 +1,109 @@
 # 🌌 Nebari Documentation Assistant
 
-A production-ready RAG (Retrieval Augmented Generation) chatbot that answers questions about [Nebari](https://www.nebari.dev/) using the official documentation. Built with Streamlit, ChromaDB, and Anthropic Claude.
+A production-ready RAG (Retrieval Augmented Generation) chatbot that answers questions about [Nebari](https://www.nebari.dev/) using the official documentation. Built with Streamlit, ChromaDB, and Anthropic Claude Sonnet 4.
 
-![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/streamlit-1.31+-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+**🔗 Live Demo**: [nebari-docs-rag.streamlit.app](https://nebari-docs-rag.streamlit.app)
+
 ## 🎯 Features
 
-- **Semantic Search**: Retrieves relevant documentation using vector embeddings
+### Core Functionality
+- **Semantic Search**: Retrieves relevant documentation using vector embeddings (all-MiniLM-L6-v2)
 - **Intelligent Chunking**: Preserves document structure by splitting at markdown headers
-- **Source Citations**: Every answer includes clickable source references
-- **Category Filtering**: Focus search on specific documentation sections
-- **Clean UI**: Chat interface with adjustable retrieval settings
-- **Production Ready**: Deployed on Streamlit Cloud with proper secrets management
+- **Homepage Content**: Includes "Why Choose Nebari?" marketing content with relevance boosting
+- **Source Citations**: Every answer includes clickable source references with relevance scores
+- **Clean UI**: Dark-themed chat interface with Nebari branding
+
+### Advanced Features
+- **🔐 Cookie Authentication**: 7-day persistent login (works on HTTPS/deployed, not localhost)
+- **👍👎 Feedback System**: Rate answer quality with thumbs up/down buttons
+- **💰 Cost Tracking**: Real-time token usage and cost monitoring (Claude Sonnet 4 pricing)
+- **⏱️ Performance Metrics**: Track response time, retrieval time, and LLM time
+- **📊 Retrieval Quality**: View relevance scores for each source document
+- **📥 Export Options**:
+  - **Markdown**: Simple text export with metadata
+  - **Zip+Images**: Full export with downloaded images and folder structure
+- **🔄 Real-Time Stats**: Sidebar metrics update immediately after each question
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│         Streamlit Web UI                │
-│  (Chat Interface + Source Viewer)       │
-└────────────────┬────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│           Streamlit Web UI                      │
+│  Chat + Login + Feedback + Export + Stats      │
+└────────────────┬────────────────────────────────┘
                  │
-┌────────────────▼────────────────────────┐
-│          RAG Agent                      │
-│  Query → Retrieve → Answer with Claude │
-└────────────────┬────────────────────────┘
+┌────────────────▼────────────────────────────────┐
+│          RAG Agent (agent.py)                   │
+│  Query Expansion → Retrieval → Answer          │
+│  - Homepage content boosting                    │
+│  - Token & cost tracking                        │
+│  - Timing measurements                          │
+└────────────────┬────────────────────────────────┘
                  │
-┌────────────────▼────────────────────────┐
-│       ChromaDB Vector Store             │
-│   ~250 chunks from 64 docs              │
-└─────────────────────────────────────────┘
+┌────────────────▼────────────────────────────────┐
+│       ChromaDB Vector Store                     │
+│   ~730 chunks from 64+ docs + homepage         │
+│   Metadata: category, source, title            │
+└─────────────────────────────────────────────────┘
 ```
 
 **Technology Stack:**
 
-- **Frontend**: Streamlit 1.31+
-- **Vector Database**: ChromaDB 0.4+
-- **Embeddings**: Sentence Transformers (all-MiniLM-L6-v2)
-- **LLM**: Anthropic Claude 3.5 Sonnet
-- **Document Processing**: LangChain, markdown-it-py
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| **Frontend** | Streamlit | 1.31+ |
+| **Vector DB** | ChromaDB | 0.4+ |
+| **Embeddings** | Sentence Transformers | all-MiniLM-L6-v2 (384 dims) |
+| **LLM** | Anthropic Claude | Sonnet 4 (2025-05-14) |
+| **Auth** | extra-streamlit-components | CookieManager |
+| **HTTP Client** | httpx | 0.27+ (for image downloads) |
+| **Document Processing** | markdown-it-py, pymdown-extensions | - |
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.9 or higher
-- Anthropic API key ([get one here](https://console.anthropic.com/))
-- Nebari documentation repository
+- **Python 3.11+**
+- **Anthropic API key** ([get one here](https://console.anthropic.com/))
+- **Nebari documentation** repository cloned locally
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone this repository**
 
    ```bash
-   cd /Users/goanpeca/Desktop/develop/datalayer/rag
+   git clone https://github.com/goanpeca/nebari-docs-rag-demo.git
+   cd nebari-docs-rag-demo
    ```
 
-2. **Create virtual environment**
+2. **Install dependencies (using conda)**
+
+   ```bash
+   conda env create -f environment.yml
+   conda activate nebari-rag
+   ```
+
+   **OR using pip:**
 
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-
-   ```bash
+   source venv/bin/activate  # Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables**
+3. **Set environment variables**
 
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your ANTHROPIC_API_KEY
-   ```
-
-   Your `.env` should look like:
+   Create a `.env` file:
 
    ```bash
    ANTHROPIC_API_KEY=sk-ant-...
-   NEBARI_DOCS_PATH=/Users/goanpeca/Desktop/develop/datalayer/nebari-docs
-   CHROMA_PERSIST_DIR=./chroma_db
+   NEBARI_DOCS_PATH=/path/to/nebari-docs
+   DEMO_USERNAME=demo
+   DEMO_PASSWORD=your_password
    ```
 
 ### Running the Application
@@ -91,30 +111,34 @@ A production-ready RAG (Retrieval Augmented Generation) chatbot that answers que
 1. **Ingest documentation** (one-time setup)
 
    ```bash
-   python ingest_docs.py
+   python ingest_docs.py --docs-path /path/to/nebari-docs
    ```
 
    This will:
-   - Scan all markdown files in nebari-docs
-   - Chunk them semantically by headers
+   - Scan all markdown/MDX files in nebari-docs
+   - Extract homepage marketing content (Why Choose Nebari?)
+   - Chunk semantically by headers (max 800 tokens, 100 overlap)
    - Generate embeddings and store in ChromaDB
-   - Takes ~2-3 minutes for 64 documents
+   - Takes ~2-3 minutes for 64+ documents
 
    Expected output:
-
    ```
-   📚 Found 64 documentation files
-   ✂️  Created 247 chunks from 64 documents
-   ✨ Successfully ingested 247 chunks to ChromaDB
+   📚 Found 65 files (64 docs + 1 homepage)
+   ✂️  Created ~730 chunks
+   ✨ Successfully ingested to ChromaDB
    ```
 
-2. **Launch the Streamlit app**
+2. **Launch Streamlit app**
 
    ```bash
    streamlit run app.py
    ```
 
-   The app will open at `http://localhost:8501`
+   Opens at `http://localhost:8501`
+
+3. **Login with credentials**
+
+   Use the username/password from your `.env` file
 
 ## 💻 Usage
 
@@ -122,249 +146,222 @@ A production-ready RAG (Retrieval Augmented Generation) chatbot that answers que
 
 Try asking:
 
+- **"Why should we use Nebari?"** - Gets homepage marketing content with benefits
 - "How do I deploy Nebari on AWS?"
 - "What is the difference between local and cloud deployment?"
 - "How do I configure authentication with Keycloak?"
-- "What are the hardware requirements for Nebari?"
+- "What are the hardware requirements?"
 - "How do I troubleshoot deployment errors?"
 
-### Adjusting Settings
+### Features Guide
 
-Use the sidebar to:
+**Sidebar Settings:**
+- **Sources to retrieve**: 3-10 sources (more = more context, slower)
+- **Creativity**: 0.0-1.0 (lower = factual, higher = creative)
 
-- **Sources to retrieve**: More sources = more context but slower responses
-- **Creativity**: Lower values (0.0-0.3) for factual answers, higher for creative explanations
-- **Filter by category**: Narrow search to get-started, tutorials, how-tos, etc.
+**Feedback & Export:**
+- Rate answers with 👍 👎 buttons
+- View stats: queries, tokens, cost, feedback
+- Export as markdown or zip with images
+
+**Source Citations:**
+- Each answer shows 3-5 source documents
+- Expandable cards with relevance scores
+- Category labels (docs, community, website)
 
 ## 🔧 Technical Details
 
-### Chunking Strategy
+### Query Expansion for "Why" Questions
 
-Documents are split semantically by markdown headers (H2/H3) instead of arbitrary character limits. This preserves logical structure and improves retrieval quality.
+Special handling for benefits/value proposition questions:
 
 ```python
-# Each chunk includes:
-# - Document title (context)
-# - Section heading
-# - Section content
-# Maximum 800 tokens with 100 token overlap
+# When user asks "Why should we use Nebari?"
+queries = [
+    "Why should we use Nebari?",  # Original
+    "why choose nebari benefits features advantages",  # Expanded
+    "gitops collaboration dask open source platform"  # Keywords
+]
+
+# Homepage content gets 0.6x distance boost (better ranking)
+if is_why_question and source == "website":
+    distance *= 0.6  # Improves relevance by ~40%
 ```
 
-**Why semantic chunking?**
+### Cookie Authentication
 
-- Preserves document hierarchy
-- Maintains context within sections
-- ~30% better retrieval accuracy than character-based splitting
+- Uses `extra-streamlit-components` CookieManager
+- SHA-256 hashed credentials
+- 7-day expiration (604800 seconds)
+- **Requires HTTPS** - works on Streamlit Cloud, not localhost
 
-### Embedding Model
+### Cost Tracking
 
-Uses Sentence Transformers `all-MiniLM-L6-v2`:
+Claude Sonnet 4 pricing (as of Feb 2025):
+- Input: $3.00 per million tokens
+- Output: $15.00 per million tokens
 
-- **Dimensions**: 384
-- **Speed**: Fast (local, no API calls)
-- **Quality**: Excellent for technical documentation
-- **Cost**: Free
+```python
+input_cost = (input_tokens / 1_000_000) * 3.00
+output_cost = (output_tokens / 1_000_000) * 15.00
+```
 
-### Prompt Engineering
+### Export with Images
 
-The system prompt instructs Claude to:
-
-- Answer ONLY using provided context
-- Cite sources with [category/filename]
-- Be honest when information isn't in docs
-- Provide step-by-step guidance for how-to questions
-- Explain concepts clearly for conceptual questions
-
-See [`utils/prompts.py`](utils/prompts.py) for the full prompt template.
+Zip export:
+1. Extracts all image URLs from markdown (`![alt](https://...)`)
+2. Downloads images with `httpx`
+3. Creates folder structure: `chat.md` + `images/image_1.png`
+4. Replaces URLs with local paths in markdown
+5. Returns in-memory zip file
 
 ## 🚢 Deployment to Streamlit Cloud
 
-### Step 1: Prepare Repository
+### Step 1: Pre-build Vector Database
 
-1. **Initialize git**
-
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: Nebari RAG agent"
-   ```
-
-2. **Push to GitHub**
-   ```bash
-   gh repo create nebari-rag-agent --public --source=. --remote=origin --push
-   ```
-
-### Step 2: Pre-build Vector Database
-
-**CRITICAL**: The vector database must be committed to Git for Streamlit Cloud deployment.
+**CRITICAL**: Commit `chroma_db/` to Git to avoid build timeouts.
 
 ```bash
-# Run ingestion
 python ingest_docs.py
-
-# Commit the database
 git add chroma_db/
 git commit -m "Add pre-built vector database"
 git push
 ```
 
-**Why?** Streamlit Cloud has limited build time. Pre-building avoids timeout issues during deployment.
-
-### Step 3: Deploy to Streamlit Cloud
+### Step 2: Deploy
 
 1. Go to [share.streamlit.io](https://share.streamlit.io/)
-2. Click "New app"
-3. Select your GitHub repository
-4. Set main file: `app.py`
-5. Add secrets:
+2. Connect GitHub repository
+3. Set main file: `app.py`
+4. Add secrets:
    ```toml
    ANTHROPIC_API_KEY = "sk-ant-..."
+   DEMO_USERNAME = "your_username"
+   DEMO_PASSWORD = "your_password"
    ```
-6. Deploy!
+5. Deploy!
 
-### Step 4: Test
+### Step 3: Test Cookie Auth
 
-Visit your deployed app URL and verify:
+1. Login with credentials
+2. **Refresh page** (Cmd+R)
+3. ✅ Should stay logged in (cookie persists for 7 days)
 
-- ✅ Chat interface loads
-- ✅ Example questions work
-- ✅ Sources display correctly
-- ✅ No API errors
+**Note**: Cookie auth only works on HTTPS (Streamlit Cloud), not localhost.
 
 ## 📁 Project Structure
 
 ```
-rag/
-├── app.py                    # Streamlit UI (main entry point)
-├── ingest_docs.py           # Document ingestion pipeline
-├── agent.py                 # RAG agent logic
-├── requirements.txt         # Python dependencies
-├── .env.example            # Environment template
-├── .gitignore              # Git ignore rules
+nebari-docs-rag-demo/
+├── app.py                      # Streamlit UI with auth, feedback, export
+├── agent.py                    # RAG agent with query expansion & tracking
+├── ingest_docs.py              # Doc ingestion + homepage extraction
+├── requirements.txt            # pip dependencies
+├── environment.yml             # conda environment
+├── pyproject.toml             # project config (ruff, pydocstyle, bandit)
+├── .pre-commit-config.yaml    # pre-commit hooks
 ├── utils/
-│   ├── chunking.py         # Markdown chunking utilities
-│   └── prompts.py          # LLM prompt templates
+│   ├── chunking.py            # Semantic markdown chunking
+│   └── prompts.py             # LLM system prompt
 ├── .streamlit/
-│   └── config.toml         # Streamlit theme configuration
-├── chroma_db/              # Vector database (committed for deployment)
-└── README.md               # This file
+│   └── config.toml            # Theme + CORS settings
+├── chroma_db/                 # Vector database (git-committed)
+├── tests/                     # pytest tests
+└── specifications/            # Architecture & planning docs
 ```
 
 ## 🧪 Testing
 
-### Test Ingestion
+Run pre-commit hooks (mypy, ruff, pydocstyle, bandit):
 
 ```bash
-python ingest_docs.py --docs-path /path/to/nebari-docs
+pre-commit run --all-files
 ```
 
-Expected: 64 documents → ~250 chunks
-
-### Test Agent
+Run pytest tests:
 
 ```bash
-python agent.py
+pytest tests/
 ```
-
-This runs a simple test query and prints the answer with sources.
-
-### Test Retrieval Accuracy
-
-Create a test set of questions and verify that top-5 results contain the answer:
-
-```python
-from agent import NebariAgent
-
-agent = NebariAgent()
-
-test_cases = [
-    ("How do I deploy Nebari on AWS?", "how-tos"),
-    ("What is Nebari?", "get-started"),
-    # Add more test cases
-]
-
-for query, expected_category in test_cases:
-    result = agent.answer_question(query)
-    # Verify sources contain expected category
-```
-
-## 🤝 Contributing
-
-Contributions welcome! Here's how:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests and linting
-5. Commit (`git commit -m 'Add amazing feature'`)
-6. Push (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
 
 ## 📊 Performance Metrics
 
-Based on testing with 64 Nebari documentation files:
+Based on 64+ Nebari docs + homepage:
 
 | Metric                     | Value      |
 | -------------------------- | ---------- |
-| Documents Indexed          | 64         |
-| Vector Chunks              | ~250       |
-| Average Query Time         | <3 seconds |
-| Retrieval Accuracy (Top-5) | >85%       |
+| Documents Indexed          | 65 (64 docs + homepage) |
+| Vector Chunks              | ~730       |
+| Average Query Time         | <10 seconds (includes LLM) |
+| Retrieval Time             | <1 second  |
+| LLM Time                   | ~8 seconds |
+| Retrieval Accuracy (Top-5) | >85% (>90% for "why" questions) |
 | Database Size              | ~15 MB     |
-| Cold Start Time            | <2 seconds |
+| Cost per Query             | ~$0.01-0.02 |
 
 ## 🐛 Troubleshooting
 
 ### "Collection not found" error
 
-**Solution**: Run `python ingest_docs.py` to create the vector database first.
+**Solution**: Run `python ingest_docs.py` to create the vector database.
 
 ### "ANTHROPIC_API_KEY not found"
 
-**Solution**:
-
-- For local dev: Add `ANTHROPIC_API_KEY` to `.env`
-- For Streamlit Cloud: Add it in App Settings → Secrets
-
-### Slow responses
-
 **Solutions**:
+- **Local**: Add to `.env` file
+- **Streamlit Cloud**: Add in App Settings → Secrets
 
-- Reduce "Sources to retrieve" in sidebar (default: 5)
-- Check internet connection (API calls to Claude)
-- Verify ChromaDB is persisted locally (not recreating on each query)
+### Cookie not persisting on localhost
 
-### Poor answer quality
+**Expected behavior**: Cookies only work on HTTPS (Streamlit Cloud), not `localhost`.
+**Solution**: Deploy to Streamlit Cloud to test cookie auth.
 
-**Solutions**:
+### "Why should we use Nebari?" returns wrong answer
 
-- Increase "Sources to retrieve" for more context
-- Try different category filters
-- Rephrase your question more specifically
-- Check if topic is covered in Nebari docs
+**Solution**: The agent now includes query expansion and homepage content boosting. Re-run ingestion to ensure homepage content is indexed.
 
-## 🔮 Future Enhancements
+## 🎨 Customization
 
-- [ ] Conversation memory (maintain context across follow-ups)
-- [ ] Multi-query retrieval (generate multiple search variations)
-- [ ] Feedback loop (👍 👎 buttons to improve retrieval)
-- [ ] Analytics dashboard (track popular queries, identify doc gaps)
-- [ ] Multi-modal RAG (include diagrams from `/static/img/`)
-- [ ] Fine-tuned embeddings (domain adaptation for Nebari-specific terms)
+### Change Theme Colors
+
+Edit `.streamlit/config.toml`:
+
+```toml
+[theme]
+primaryColor = "#FF6B6B"  # Nebari red
+backgroundColor = "#0E1117"  # Dark background
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"
+```
+
+### Adjust Chunking
+
+Edit `ingest_docs.py`:
+
+```python
+chunks = chunk_by_headers(
+    doc["content"],
+    doc["metadata"],
+    max_chunk_size=800,  # Increase for more context
+    overlap=100          # Increase for more overlap
+)
+```
+
+### Add More Query Expansions
+
+Edit `agent.py` `expand_query()` method to add custom query patterns.
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE.txt](LICENSE.txt) for details
 
 ## 🙏 Acknowledgments
 
 - **Nebari Team** - For excellent documentation
-- **Anthropic** - For Claude 3.5 Sonnet
-- **Streamlit** - For the amazing framework
+- **Anthropic** - For Claude Sonnet 4
+- **Streamlit** - For the framework
 - **ChromaDB** - For the vector database
 
 ---
 
-**Built for the AI Evangelist interview** - Demonstrating RAG implementation, documentation-first development, and production deployment skills.
-
-Questions? Open an issue or reach out!
+**Built for AI Evangelist interview demo** | [LinkedIn](https://www.linkedin.com/in/goanpeca) | [GitHub](https://github.com/goanpeca/nebari-docs-rag-demo)

@@ -11,7 +11,7 @@
 
 This will:
 
-- Install test dependencies (pytest, black, flake8, etc.)
+- Install test dependencies (pytest, ruff, mypy, etc.)
 - Install pre-commit hooks
 - Run the test suite
 
@@ -59,9 +59,9 @@ pre-commit run
 
 ### Hooks Included
 
-1. **black**: Code formatting
-2. **isort**: Import sorting
-3. **flake8**: Linting
+1. **ruff**: Fast linting and formatting
+2. **pydocstyle**: Docstring style checking
+3. **mypy**: Static type checking
 4. **bandit**: Security checks
 5. **File hygiene**: Trailing whitespace, end-of-file fixes, etc.
 
@@ -121,12 +121,12 @@ jobs:
 If a hook fails, fix the issue and re-commit:
 
 ```bash
-# Auto-fix formatting issues
-black .
-isort .
+# Auto-fix formatting and linting issues
+ruff check --fix .
+ruff format .
 
-# Check linting
-flake8
+# Check types
+mypy .
 
 # Try committing again
 git commit -m "Your message"
