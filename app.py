@@ -80,17 +80,8 @@ def check_password() -> bool:
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
 
-    # Check cookie for existing auth
+    # Check cookie for existing auth (only works on HTTPS/deployed, not localhost)
     cookies = cookie_manager.get_all()
-
-    # Debug: Show what cookies we got (remove this after testing)
-    if cookies:
-        print(f"DEBUG: Retrieved cookies: {list(cookies.keys())}")
-        if "nebari_auth" in cookies:
-            print(f"DEBUG: Found nebari_auth cookie: {cookies['nebari_auth'][:20]}...")
-    else:
-        print("DEBUG: No cookies retrieved (None or empty)")
-
     auth_cookie = cookies.get("nebari_auth") if cookies else None
     if auth_cookie and not st.session_state.authenticated:
         # Verify cookie hash
@@ -143,9 +134,8 @@ def check_password() -> bool:
             if submit:
                 if username == correct_username and password == correct_password:
                     st.session_state.authenticated = True
-                    # Set cookie for 7 days (max_age in seconds)
+                    # Set cookie for 7 days (max_age in seconds, requires HTTPS)
                     auth_hash = hashlib.sha256(f"{username}:{password}".encode()).hexdigest()
-                    print(f"DEBUG: Setting cookie with hash: {auth_hash[:20]}...")
                     cookie_manager.set("nebari_auth", auth_hash, max_age=7 * 24 * 60 * 60)
                     st.success(" Login successful!")
                     st.rerun()
@@ -412,9 +402,9 @@ def export_conversation_with_images() -> bytes:
                         response = client.get(url)
                         response.raise_for_status()
                         zip_file.writestr(f"images/{filename}", response.content)
-                    except Exception as e:
-                        # Skip images that fail to download
-                        print(f"Failed to download {url}: {e}")
+                    except Exception:  # nosec B110
+                        # Skip images that fail to download silently
+                        pass
 
     zip_buffer.seek(0)
     return zip_buffer.getvalue()

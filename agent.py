@@ -59,7 +59,6 @@ class NebariAgent:
 
         try:
             self.collection = self.client.get_collection(name=collection_name)
-            print(f"Loaded collection: {collection_name}")
         except Exception as e:
             raise ValueError(
                 f"Collection '{collection_name}' not found. "
