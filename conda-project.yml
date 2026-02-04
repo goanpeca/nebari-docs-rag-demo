@@ -1,0 +1,6 @@
+name: nebari-docs-rag-demo
+display_name: Nebari Docs Assitant
+description: A documentation assitant for Nebari
+environments:
+  default:
+    - environment.yml

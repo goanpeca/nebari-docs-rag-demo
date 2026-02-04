@@ -12,10 +12,18 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
-import httpx  # type: ignore[import-not-found]
+import httpx
 import streamlit as st
 from dotenv import load_dotenv
-from extra_streamlit_components import CookieManager  # type: ignore[import-not-found]
+
+# Optional: Cookie authentication (requires extra-streamlit-components)
+try:
+    from extra_streamlit_components import CookieManager
+
+    COOKIES_AVAILABLE = True
+except ImportError:
+    COOKIES_AVAILABLE = False
+    CookieManager = None
 
 from agent import NebariAgent
 
@@ -30,8 +38,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Initialize cookie manager at module level with unique key
-cookie_manager = CookieManager(key="nebari_cookie_manager")
+# Initialize cookie manager at module level with unique key (if available)
+cookie_manager = CookieManager(key="nebari_cookie_manager") if COOKIES_AVAILABLE else None
 
 
 def check_password() -> bool:
@@ -81,16 +89,17 @@ def check_password() -> bool:
         st.session_state.authenticated = False
 
     # Check cookie for existing auth (only works on HTTPS/deployed, not localhost)
-    cookies = cookie_manager.get_all()
-    auth_cookie = cookies.get("nebari_auth") if cookies else None
-    if auth_cookie and not st.session_state.authenticated:
-        # Verify cookie hash
-        expected_hash = hashlib.sha256(
-            f"{correct_username}:{correct_password}".encode()
-        ).hexdigest()
-        if auth_cookie == expected_hash:
-            st.session_state.authenticated = True
-            return True
+    if cookie_manager is not None:
+        cookies = cookie_manager.get_all()
+        auth_cookie = cookies.get("nebari_auth") if cookies else None
+        if auth_cookie and not st.session_state.authenticated:
+            # Verify cookie hash
+            expected_hash = hashlib.sha256(
+                f"{correct_username}:{correct_password}".encode()
+            ).hexdigest()
+            if auth_cookie == expected_hash:
+                st.session_state.authenticated = True
+                return True
 
     # If already authenticated, return True
     if st.session_state.authenticated:
@@ -135,8 +144,9 @@ def check_password() -> bool:
                 if username == correct_username and password == correct_password:
                     st.session_state.authenticated = True
                     # Set cookie for 7 days (max_age in seconds, requires HTTPS)
-                    auth_hash = hashlib.sha256(f"{username}:{password}".encode()).hexdigest()
-                    cookie_manager.set("nebari_auth", auth_hash, max_age=7 * 24 * 60 * 60)
+                    if cookie_manager is not None:
+                        auth_hash = hashlib.sha256(f"{username}:{password}".encode()).hexdigest()
+                        cookie_manager.set("nebari_auth", auth_hash, max_age=7 * 24 * 60 * 60)
                     st.success(" Login successful!")
                     st.rerun()
                 else:
@@ -593,8 +603,9 @@ def main() -> None:
         # Logout button
         st.markdown("---")
         if st.button("Logout", width="stretch"):
-            # Clear cookie
-            cookie_manager.delete("nebari_auth")
+            # Clear cookie (if available)
+            if cookie_manager is not None:
+                cookie_manager.delete("nebari_auth")
             # Clear session
             st.session_state.authenticated = False
             st.session_state.messages = []
