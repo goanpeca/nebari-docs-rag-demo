@@ -19,6 +19,9 @@ from utils.chunking import chunk_by_headers, extract_frontmatter, strip_mdx_comp
 # Load environment variables
 load_dotenv()
 
+# Base directory for file paths (configurable via BASE_DIR env var)
+BASE_DIR = Path(os.getenv("BASE_DIR", Path(__file__).parent))
+
 
 def extract_homepage_content() -> str:
     """Extract marketing content from homepage JSX file.
@@ -243,7 +246,7 @@ def chunk_documents(docs: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def ingest_to_chroma(
     chunks: list[dict[str, Any]],
     collection_name: str = "nebari_docs",
-    persist_directory: str = "./chroma_db",
+    persist_directory: str = str(BASE_DIR / "chroma_db"),
 ) -> None:
     """Generate embeddings and store chunks in ChromaDB.
 
@@ -310,7 +313,7 @@ def main() -> None:
     parser.add_argument(
         "--persist-dir",
         type=str,
-        default=os.getenv("CHROMA_PERSIST_DIR", "./chroma_db"),
+        default=os.getenv("CHROMA_PERSIST_DIR", str(BASE_DIR / "chroma_db")),
         help="Directory to persist ChromaDB",
     )
     parser.add_argument(

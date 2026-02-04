@@ -6,6 +6,7 @@ and answer generation using Claude.
 
 import os
 import time
+from pathlib import Path
 from typing import Any
 
 import chromadb
@@ -16,6 +17,9 @@ from dotenv import load_dotenv
 from utils.prompts import SYSTEM_PROMPT
 
 load_dotenv()
+
+# Base directory for ChromaDB (configurable via BASE_DIR env var)
+BASE_DIR = Path(os.getenv("BASE_DIR", Path(__file__).parent))
 
 
 class NebariAgent:
@@ -49,7 +53,7 @@ class NebariAgent:
 
     def __init__(
         self,
-        chroma_path: str = "./chroma_db",
+        chroma_path: str = str(BASE_DIR / "chroma_db"),
         collection_name: str = "nebari_docs",
         anthropic_api_key: str | None = None,
     ) -> None:

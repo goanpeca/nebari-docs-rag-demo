@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
 """Debug script to check what's in ChromaDB for architecture content."""
 
+import os
+from pathlib import Path
+
 import chromadb
 from chromadb.config import Settings
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Base directory for ChromaDB (configurable via BASE_DIR env var)
+BASE_DIR = Path(os.getenv("BASE_DIR", Path(__file__).parent))
 
 # Initialize ChromaDB client
 client = chromadb.PersistentClient(
-    path="./chroma_db", settings=Settings(anonymized_telemetry=False)
+    path=str(BASE_DIR / "chroma_db"), settings=Settings(anonymized_telemetry=False)
 )
 
 # Get collection

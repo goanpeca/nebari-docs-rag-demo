@@ -30,10 +30,16 @@ from agent import NebariAgent
 # Load environment variables
 load_dotenv()
 
+# Base directory for all file paths (configurable via BASE_DIR env var)
+BASE_DIR = Path(os.getenv("BASE_DIR", Path(__file__).parent))
+
+# Authentication enabled only if both username and password are set
+AUTH_ENABLED = bool(os.getenv("DEMO_USERNAME") and os.getenv("DEMO_PASSWORD"))
+
 # Page configuration
 st.set_page_config(
     page_title="Nebari Documentation Assistant",
-    page_icon="static/nebari-logo.png",
+    page_icon=str(BASE_DIR / "static" / "nebari-logo.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -52,6 +58,10 @@ def check_password() -> bool:
     bool
         True if user is authenticated
     """
+    # Skip authentication entirely if credentials not configured
+    if not AUTH_ENABLED:
+        return True
+
     # Get credentials from Streamlit secrets or environment variables
     correct_username = None
     correct_password = None
@@ -130,7 +140,7 @@ def check_password() -> bool:
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.image("static/nebari-logo.png", width=150)
+        st.image(str(BASE_DIR / "static" / "nebari-logo.png"), width=150)
         st.markdown("<h1 class='login-title'>Nebari Docs Assistant</h1>", unsafe_allow_html=True)
         st.markdown("###  Login Required")
         st.caption("Please enter your credentials to access the demo")
@@ -186,6 +196,44 @@ st.markdown(
 }
 .relevance-low {
     color: #888;
+}
+
+/* Sidebar scroll indicator - gradient fade at bottom */
+section[data-testid="stSidebar"] > div:first-child {
+    position: relative;
+}
+
+section[data-testid="stSidebar"] > div:first-child::after {
+    content: "↓ Scroll for more ↓";
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(14, 17, 23, 0.95) 50%,
+        rgba(14, 17, 23, 1) 100%
+    );
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 10px;
+    font-size: 0.85em;
+    color: #FF6B6B;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* Hide scroll indicator when scrolled to bottom */
+section[data-testid="stSidebar"] > div:first-child:not(:hover)::after {
+    animation: fadeInOut 3s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 </style>
 """,
@@ -449,7 +497,7 @@ def main() -> None:
     # Title with Nebari logo
     col1, col2 = st.columns([1, 8])
     with col1:
-        st.image("static/nebari-logo.png", width=120)
+        st.image(str(BASE_DIR / "static" / "nebari-logo.png"), width=120)
     with col2:
         st.markdown(
             "<h1 style='margin-top: 20px;'>Nebari Documentation Assistant</h1>",
@@ -600,19 +648,24 @@ def main() -> None:
         Built by [@goanpeca](https://www.linkedin.com/in/goanpeca) | © 2026
         """)
 
-        # Logout button
-        st.markdown("---")
-        if st.button("Logout", width="stretch"):
-            # Clear cookie (if available)
-            if cookie_manager is not None:
-                cookie_manager.delete("nebari_auth")
-            # Clear session
-            st.session_state.authenticated = False
-            st.session_state.messages = []
-            st.session_state.query_history = []
-            if "agent" in st.session_state:
-                del st.session_state.agent
-            st.rerun()
+        # Logout button (only show if authentication is enabled)
+        if AUTH_ENABLED:
+            st.markdown("---")
+            if st.button("Logout", width="stretch"):
+                # Clear cookie (if available)
+                if cookie_manager is not None:
+                    try:
+                        cookie_manager.delete("nebari_auth")
+                    except KeyError:
+                        # Cookie doesn't exist, that's fine
+                        pass
+                # Clear session
+                st.session_state.authenticated = False
+                st.session_state.messages = []
+                st.session_state.query_history = []
+                if "agent" in st.session_state:
+                    del st.session_state.agent
+                st.rerun()
 
     # Display chat history
     for idx, message in enumerate(st.session_state.messages):
